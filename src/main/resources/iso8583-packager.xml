@@ -1,0 +1,38 @@
+<!--
+Packager ISO 8583:1987 simplifie pour la simulation : definit uniquement les champs
+utilises par nos scenarios (PAN, montant, STAN, RRN, code autorisation, code reponse, id TPE).
+Format compatible org.jpos.iso.packager.GenericPackager.
+-->
+<!DOCTYPE isopackager SYSTEM "genericpackager.dtd">
+<isopackager>
+    <isofield
+        id="0" length="4" name="Message Type Indicator"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="2" length="19" name="PAN"
+        class="org.jpos.iso.IFA_LLNUM"/>
+    <isofield
+        id="3" length="6" name="Processing Code"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="4" length="12" name="Montant"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="11" length="6" name="STAN"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="37" length="12" name="RRN"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="38" length="6" name="Code Autorisation"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="39" length="2" name="Code Reponse"
+        class="org.jpos.iso.IFA_NUMERIC"/>
+    <isofield
+        id="41" length="8" name="Id TPE"
+        class="org.jpos.iso.IF_CHAR"/>
+    <isofield
+        id="42" length="15" name="Id Commercant"
+        class="org.jpos.iso.IF_CHAR"/>
+</isopackager>
