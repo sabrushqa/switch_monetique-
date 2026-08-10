@@ -6,3 +6,7 @@ target/
 .env
 *.log
 .DS_Store
+target/
+.env
+*.log
+.DS_Store
