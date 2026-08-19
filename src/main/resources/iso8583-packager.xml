@@ -8,6 +8,18 @@ Format compatible org.jpos.iso.packager.GenericPackager.
     <isofield
         id="0" length="4" name="Message Type Indicator"
         class="org.jpos.iso.IFA_NUMERIC"/>
+    <!--
+      Champ bitmap (DE1) : obligatoire pour tout packager derive de
+      ISOBasePackager/GenericPackager, meme simplifie - c'est lui qui indique
+      quels champs sont presents dans le message. Sans lui, ISOBasePackager.pack()
+      leve une NullPointerException des qu'on essaie reellement d'envoyer un
+      message sur le fil (getBitMapfieldPackager() retourne null), ce qui ne se
+      voit pas dans des tests qui appellent directement process(...) sans
+      passer par un vrai ASCIIChannel.
+    -->
+    <isofield
+        id="1" length="8" name="Bitmap"
+        class="org.jpos.iso.IFA_BITMAP"/>
     <isofield
         id="2" length="19" name="PAN"
         class="org.jpos.iso.IFA_LLNUM"/>

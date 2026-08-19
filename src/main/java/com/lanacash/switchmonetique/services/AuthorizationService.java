@@ -41,12 +41,19 @@ public class AuthorizationService {
     }
 
     public TransactionMonetique autoriserTransactionTpe(String idTpe, BigDecimal montant, TypeTransaction type,
-                                                         String stan, String rrn, boolean carteValide,
+                                                         String pan, String stan, String rrn, boolean carteValide,
                                                          boolean carteExpiree) {
         TransactionMonetique transaction = nouvelleTransaction(CanalTransaction.TPE, montant, type);
         transaction.setIdTpe(idTpe);
         transaction.setStan(stan);
         transaction.setRrn(rrn);
+        // Informatif uniquement (affichage ticket) : ne conditionne aucune
+        // decision d'autorisation, qui reste basee sur carteValide/carteExpiree
+        // deja calcules par l'appelant a partir du meme PAN.
+        transaction.setPanMasque(maskPan(pan));
+        String typeCarte = detectTypeCarte(pan);
+        transaction.setTypeCarte(typeCarte);
+        transaction.setAid(aidPour(typeCarte));
 
         Optional<Tpe> tpeOpt = tpeRepository.findById(idTpe);
         if (tpeOpt.isEmpty() || !tpeOpt.get().isActif()
@@ -127,5 +134,61 @@ public class AuthorizationService {
 
     private String genererCodeAutorisation() {
         return String.valueOf((int) (100000 + Math.random() * 899999));
+    }
+
+    /**
+     * Masque le PAN a l'affichage (norme PCI-DSS : ne jamais stocker/afficher
+     * le numero complet) — ne garde que les 4 derniers chiffres, comme sur un
+     * vrai ticket de caisse ("XXXXXXXXXXXX0421").
+     */
+    private String maskPan(String pan) {
+        if (pan == null || pan.length() < 4) {
+            return null;
+        }
+        String last4 = pan.substring(pan.length() - 4);
+        return "X".repeat(pan.length() - 4) + last4;
+    }
+
+    /**
+     * Detection du schema de carte par plage de BIN (norme ISO/IEC 7812,
+     * memes prefixes que les vrais reseaux Visa/Mastercard) — purement
+     * informatif pour l'affichage du ticket, "CARTE LOCALE" en repli pour
+     * tout PAN simule hors de ces plages (scenario de test).
+     */
+    private String detectTypeCarte(String pan) {
+        if (pan == null || pan.isEmpty()) {
+            return "CARTE LOCALE";
+        }
+        if (pan.startsWith("4")) {
+            return "VISA";
+        }
+        int prefix2 = pan.length() >= 2 ? safeInt(pan.substring(0, 2)) : -1;
+        int prefix4 = pan.length() >= 4 ? safeInt(pan.substring(0, 4)) : -1;
+        if ((prefix2 >= 51 && prefix2 <= 55) || (prefix4 >= 2221 && prefix4 <= 2720)) {
+            return "MASTERCARD";
+        }
+        return "CARTE LOCALE";
+    }
+
+    private int safeInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException exception) {
+            return -1;
+        }
+    }
+
+    /**
+     * AID EMV (Application Identifier) — identifiants standard publics du
+     * registre EMVCo (pas une donnee sensible), coherents avec le type de
+     * carte detecte : permet au ticket d'afficher une ligne AID plausible,
+     * comme un vrai terminal EMV.
+     */
+    private String aidPour(String typeCarte) {
+        return switch (typeCarte) {
+            case "VISA" -> "A0000000031010";
+            case "MASTERCARD" -> "A0000000041010";
+            default -> "A0000000651010"; // AID generique "carte locale" (simulateur)
+        };
     }
 }

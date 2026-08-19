@@ -25,7 +25,7 @@ class TpeRequestListenerTest {
         approved.setCodeReponse("00");
         approved.setCodeAutorisation("123456");
         when(service.autoriserTransactionTpe(eq("TPE-001"), eq(new BigDecimal("125.50")), any(),
-            eq("000001"), eq("000001"), eq(true), eq(false))).thenReturn(approved);
+            eq("4111111111111111"), eq("000001"), eq("000001"), eq(true), eq(false))).thenReturn(approved);
 
         ISOMsg request = new ISOMsg();
         request.setMTI("0200");
@@ -67,7 +67,7 @@ class TpeRequestListenerTest {
         declined.setStatut(StatutTransaction.DECLINED);
         declined.setCodeReponse("54");
         when(service.autoriserTransactionTpe(eq("TPE-002"), any(BigDecimal.class), any(),
-            eq("000002"), eq("987654321012"), eq(true), eq(true))).thenReturn(declined);
+            eq("4111111111110000"), eq("000002"), eq("987654321012"), eq(true), eq(true))).thenReturn(declined);
 
         ISOMsg request = new ISOMsg();
         request.setMTI("0200");
@@ -83,7 +83,7 @@ class TpeRequestListenerTest {
         assertEquals("54", response.getValue().getString(39));
         assertFalse(response.getValue().hasField(38));
         verify(service).autoriserTransactionTpe(eq("TPE-002"), argThat(amount -> amount.compareTo(BigDecimal.ONE) == 0),
-            any(), eq("000002"), eq("987654321012"), eq(true), eq(true));
+            any(), eq("4111111111110000"), eq("000002"), eq("987654321012"), eq(true), eq(true));
     }
 
     @Test
@@ -94,7 +94,7 @@ class TpeRequestListenerTest {
         TransactionMonetique declined = new TransactionMonetique();
         declined.setStatut(StatutTransaction.DECLINED);
         declined.setCodeReponse("14");
-        when(service.autoriserTransactionTpe(eq("TPE-003"), any(), any(), eq("000003"),
+        when(service.autoriserTransactionTpe(eq("TPE-003"), any(), any(), eq("1234"), eq("000003"),
             eq("000003"), eq(false), eq(false))).thenReturn(declined);
 
         ISOMsg request = new ISOMsg();
@@ -105,7 +105,7 @@ class TpeRequestListenerTest {
         request.set(41, "TPE-003");
 
         assertTrue(listener.process(source, request));
-        verify(service).autoriserTransactionTpe(eq("TPE-003"), any(), any(), eq("000003"),
+        verify(service).autoriserTransactionTpe(eq("TPE-003"), any(), any(), eq("1234"), eq("000003"),
             eq("000003"), eq(false), eq(false));
     }
 }

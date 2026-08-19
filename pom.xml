@@ -116,6 +116,45 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <!--
+                  jPOS 3.0.0 est compilé pour Java 22+ (class version 66) et est
+                  incompatible avec ce projet (Java 21) : voir la note sur
+                  jpos.version ci-dessus. A l'inverse, sur un JDK trop récent
+                  (22+), Mockito ne peut plus instrumenter certaines classes
+                  (byte-buddy en retard sur la JVM) et des tests échouent avec
+                  des erreurs "Mockito cannot mock this class" qui n'ont rien
+                  à voir avec le code testé.
+                  Ce plugin fait donc échouer le build tout de suite, avec un
+                  message clair, si le JDK actif n'est pas la 21 (au lieu de
+                  laisser Maven tourner avec un JDK 22+/26 et produire des
+                  erreurs Mockito trompeuses en plein milieu des tests).
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-java-21</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[21,22)</version>
+                                    <message>
+                                        Ce module nécessite le JDK 21 (jPOS et
+                                        Mockito ne sont pas compatibles avec
+                                        un JDK plus récent ici). Relancez avec :
+                                        JAVA_HOME=$(/usr/libexec/java_home -v 21) mvn test
+                                    </message>
+                                </requireJavaVersion>
+                            </rules>
+                            <failFast>true</failFast>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

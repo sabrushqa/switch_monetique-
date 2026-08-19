@@ -47,6 +47,48 @@ class EcommerceAndTransactionControllerTest {
     }
 
     @Test
+    void generatesNextIdBasedOnHighestExistingSuffix() {
+        SiteEcommerceRepository repository = mock(SiteEcommerceRepository.class);
+        EcommerceSiteApiController controller = new EcommerceSiteApiController(repository);
+        when(repository.save(any(SiteEcommerce.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SiteEcommerce existingLow = new SiteEcommerce();
+        existingLow.setIdSiteEcommerce("ECOM-000003");
+        SiteEcommerce existingHigh = new SiteEcommerce();
+        existingHigh.setIdSiteEcommerce("ECOM-000041");
+        SiteEcommerce nonMatching = new SiteEcommerce();
+        nonMatching.setIdSiteEcommerce("VAD-42");
+        when(repository.findAll()).thenReturn(List.of(existingLow, existingHigh, nonMatching));
+
+        EcommerceSiteProvisionRequest request = new EcommerceSiteProvisionRequest();
+        request.setIdCommercant("42");
+        request.setUrl("https://shop.example");
+
+        SiteEcommerce created = controller.provisionnerNouveau(request);
+
+        assertEquals("ECOM-000042", created.getIdSiteEcommerce());
+        assertEquals("42", created.getIdCommercant());
+        assertEquals("https://shop.example", created.getUrl());
+        assertTrue(created.isActif());
+    }
+
+    @Test
+    void generatesFirstIdWhenNoneExist() {
+        SiteEcommerceRepository repository = mock(SiteEcommerceRepository.class);
+        EcommerceSiteApiController controller = new EcommerceSiteApiController(repository);
+        when(repository.findAll()).thenReturn(List.of());
+        when(repository.save(any(SiteEcommerce.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EcommerceSiteProvisionRequest request = new EcommerceSiteProvisionRequest();
+        request.setIdCommercant("7");
+        request.setUrl("https://boutique.example");
+
+        SiteEcommerce created = controller.provisionnerNouveau(request);
+
+        assertEquals("ECOM-000001", created.getIdSiteEcommerce());
+    }
+
+    @Test
     void delegatesEcommercePaymentToAuthorizationEngine() {
         AuthorizationService service = mock(AuthorizationService.class);
         EcommerceTransactionController controller = new EcommerceTransactionController(service);

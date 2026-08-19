@@ -57,6 +57,23 @@ public class TransactionMonetique {
     @Column(name = "code_reponse", length = 2)
     private String codeReponse;
 
+    // Le PAN (DE2) arrive bien via ISO8583 (TpeRequestListener) mais n'etait
+    // jusqu'ici jamais persiste — utilise seulement pour valider carteValide/
+    // carteExpiree puis jete. Champs ajoutes pour reproduire un vrai ticket
+    // de caisse (numero masque, type de carte, AID EMV) — voir
+    // AuthorizationService::maskPan/detectTypeCarte/aidPour et
+    // MerchantTicketService.java cote demo (redesign du ticket PDF).
+    @Column(name = "pan_masque", length = 20)
+    private String panMasque;
+
+    @Column(name = "type_carte", length = 15)
+    private String typeCarte;
+
+    // AID EMV (Application Identifier) — identifiant standard public du
+    // schema de carte (registre EMVCo), pas une donnee secrete/sensible.
+    @Column(name = "aid", length = 20)
+    private String aid;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "statut", nullable = false, length = 15)
     private StatutTransaction statut;
@@ -164,6 +181,30 @@ public class TransactionMonetique {
 
     public void setCodeReponse(String codeReponse) {
         this.codeReponse = codeReponse;
+    }
+
+    public String getPanMasque() {
+        return panMasque;
+    }
+
+    public void setPanMasque(String panMasque) {
+        this.panMasque = panMasque;
+    }
+
+    public String getTypeCarte() {
+        return typeCarte;
+    }
+
+    public void setTypeCarte(String typeCarte) {
+        this.typeCarte = typeCarte;
+    }
+
+    public String getAid() {
+        return aid;
+    }
+
+    public void setAid(String aid) {
+        this.aid = aid;
     }
 
     public StatutTransaction getStatut() {

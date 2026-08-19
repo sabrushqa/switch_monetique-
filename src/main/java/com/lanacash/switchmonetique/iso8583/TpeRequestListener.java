@@ -39,14 +39,19 @@ public class TpeRequestListener implements ISORequestListener {
             String pan = request.getString(2);
             BigDecimal montant = new BigDecimal(request.getString(4)).movePointLeft(2);
             String stan = request.getString(11);
-            String idTpe = request.getString(41);
+            // DE41 est packe en IF_CHAR de longueur fixe (16) : jPOS complete avec des
+            // espaces a droite et ne les retire pas au decodage. Sans trim(), un id TPE
+            // reel plus court que 16 caracteres ne correspondrait plus jamais a celui
+            // stocke en base (ne se voit pas dans un test qui construit l'ISOMsg en
+            // memoire sans passer par un vrai pack/unpack sur le fil).
+            String idTpe = request.hasField(41) ? request.getString(41).trim() : null;
             String rrn = request.hasField(37) ? request.getString(37) : stan;
 
             boolean carteValide = pan != null && pan.length() >= 12;
             boolean carteExpiree = pan != null && pan.endsWith("0000");
 
             TransactionMonetique transaction = authorizationService.autoriserTransactionTpe(
-                    idTpe, montant, TypeTransaction.ACHAT, stan, rrn, carteValide, carteExpiree);
+                    idTpe, montant, TypeTransaction.ACHAT, pan, stan, rrn, carteValide, carteExpiree);
 
             ISOMsg response = (ISOMsg) request.clone();
             response.setResponseMTI();
